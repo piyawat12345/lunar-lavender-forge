@@ -1,80 +1,66 @@
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Gamepad2, Tv, Crown } from "lucide-react";
+import { Link } from "react-router-dom";
 
-const products = [
-  {
-    icon: Gamepad2,
-    title: "ไก่ตัน Roblox",
-    desc: "ไอดีตึง ๆ พร้อมเล่น Blox Fruit, Pet Simulator, Adopt Me",
-    price: "เริ่มต้น ฿29",
-    tag: "ขายดี",
-  },
-  {
-    icon: Crown,
-    title: "Blox Fruit",
-    desc: "ไอดีพร้อมสกิลเทพ เลเวลสูง อาวุธครบ พร้อมลุย",
-    price: "เริ่มต้น ฿49",
-    tag: "แนะนำ",
-  },
-  {
-    icon: Tv,
-    title: "แอพสตรีมมิ่ง",
-    desc: "Netflix, Disney+, YouTube Premium และอื่น ๆ ราคาพิเศษ",
-    price: "เริ่มต้น ฿39",
-    tag: "พรีเมียม",
-  },
+const topProducts = [
+  { id: 1, name: "Blox Fruit V4 T1 Human", price: 89, img: "/img/product/v4t1_human.png", stock: 5 },
+  { id: 2, name: "Blox Fruit V4 T1 Mink", price: 99, img: "/img/product/v4t1_mink.png", stock: 3 },
+  { id: 3, name: "Blox Fruit V4 T1 Fish", price: 89, img: "/img/product/v4t1_fish.png", stock: 7 },
+  { id: 4, name: "Blox Fruit V4 T1 Cyborg", price: 95, img: "/img/product/v4t1_cyborg.png", stock: 2 },
+  { id: 5, name: "Blox Fruit V4 T1 Ghoul", price: 95, img: "/img/product/v4t1_ghoul.png", stock: 4 },
+  { id: 6, name: "Blox Fruit V4 T1 Angel", price: 99, img: "/img/product/v4t1_angel.png", stock: 0 },
+  { id: 7, name: "Netflix Premium 6M", price: 199, img: "/img/product/6m.png", stock: 10 },
+  { id: 8, name: "Netflix+Disney+ 6M", price: 299, img: "/img/product/6m_dg.png", stock: 5 },
+  { id: 9, name: "Fisch ไอดี 1", price: 59, img: "/img/product/1fisch.png", stock: 8 },
+  { id: 10, name: "Fisch ไอดี 2", price: 79, img: "/img/product/2fisch.png", stock: 6 },
+  { id: 11, name: "AV 10K", price: 150, img: "/img/product/av_10k.png", stock: 3 },
+  { id: 12, name: "AV 20K", price: 250, img: "/img/product/av_20k.png", stock: 4 },
 ];
 
 const ProductsSection = () => {
   return (
-    <section id="products" className="py-24 px-6">
-      <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-3xl sm:text-4xl font-bold">
-            สินค้า<span className="text-gradient-primary">ยอดนิยม</span>
-          </h2>
-          <p className="text-muted-foreground mt-4">เลือกสินค้าที่ใช่สำหรับคุณ</p>
-        </motion.div>
+    <section id="products" className="max-w-6xl mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-foreground">สินค้าแนะนำ</h2>
+        <Link to="/categories" className="px-4 py-2 border border-primary/50 text-primary text-sm rounded-lg hover:bg-primary/10 transition-colors">
+          ดูเพิ่มเติม
+        </Link>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {products.map((p, i) => (
-            <motion.div
-              key={p.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.12 }}
-              className="group relative bg-card rounded-2xl p-8 border border-border hover:border-primary/40 transition-all duration-300 flex flex-col"
-            >
-              {/* Tag */}
-              <span className="absolute top-4 right-4 text-[10px] font-semibold uppercase tracking-wider bg-primary/15 text-primary rounded-full px-3 py-1">
-                {p.tag}
-              </span>
-
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
-                <p.icon size={26} className="text-primary" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {topProducts.map((product, i) => (
+          <motion.div
+            key={product.id}
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <Link to={`/shop/${product.id}`}>
+              <div className="bg-card rounded-xl border border-border hover:border-primary/50 transition-all overflow-hidden group">
+                <div className="aspect-square overflow-hidden">
+                  <img
+                    src={product.img}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="p-2">
+                  <h3 className="text-xs font-bold text-foreground line-clamp-2">{product.name}</h3>
+                  <p className="text-sm font-bold text-primary mt-1">{product.price.toFixed(2)} บาท</p>
+                  {product.stock > 0 ? (
+                    <button className="w-full mt-2 py-1.5 bg-primary text-primary-foreground text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors">
+                      ซื้อสินค้า
+                    </button>
+                  ) : (
+                    <button disabled className="w-full mt-2 py-1.5 bg-muted text-muted-foreground text-xs font-bold rounded-lg cursor-not-allowed">
+                      สินค้าหมด
+                    </button>
+                  )}
+                </div>
               </div>
-
-              <h3 className="text-xl font-semibold mb-2">{p.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed flex-1">{p.desc}</p>
-
-              <div className="mt-6 flex items-center justify-between">
-                <span className="text-lg font-bold text-gradient-primary">{p.price}</span>
-                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5">
-                  ดูเพิ่มเติม
-                  <ArrowRight size={14} className="ml-1" />
-                </Button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+            </Link>
+          </motion.div>
+        ))}
       </div>
     </section>
   );
