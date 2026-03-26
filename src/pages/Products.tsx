@@ -1,29 +1,26 @@
 import { motion } from "framer-motion";
 import { Link, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
-// Mock product data matching old site
-const allProducts = [
-  { id: 1, name: "Blox Fruit V4 T1 Human", price: 89, img: "/img/product/v4t1_human.png", stock: 5, categoryId: 1 },
-  { id: 2, name: "Blox Fruit V4 T1 Mink", price: 99, img: "/img/product/v4t1_mink.png", stock: 3, categoryId: 1 },
-  { id: 3, name: "Blox Fruit V4 T1 Fish", price: 89, img: "/img/product/v4t1_fish.png", stock: 7, categoryId: 1 },
-  { id: 4, name: "Blox Fruit V4 T1 Cyborg", price: 95, img: "/img/product/v4t1_cyborg.png", stock: 2, categoryId: 1 },
-  { id: 5, name: "Blox Fruit V4 T1 Ghoul", price: 95, img: "/img/product/v4t1_ghoul.png", stock: 4, categoryId: 1 },
-  { id: 6, name: "Blox Fruit V4 T1 Angel", price: 99, img: "/img/product/v4t1_angel.png", stock: 0, categoryId: 1 },
-  { id: 7, name: "Netflix Premium 6 เดือน", price: 199, img: "/img/product/6m.png", stock: 10, categoryId: 4 },
-  { id: 8, name: "Netflix + Disney+ 6 เดือน", price: 299, img: "/img/product/6m_dg.png", stock: 5, categoryId: 4 },
-  { id: 9, name: "Fisch ไอดี 1", price: 59, img: "/img/product/1fisch.png", stock: 8, categoryId: 2 },
-  { id: 10, name: "Fisch ไอดี 2", price: 79, img: "/img/product/2fisch.png", stock: 6, categoryId: 2 },
-  { id: 11, name: "AV 10K", price: 150, img: "/img/product/av_10k.png", stock: 3, categoryId: 4 },
-  { id: 12, name: "AV 20K", price: 250, img: "/img/product/av_20k.png", stock: 4, categoryId: 4 },
-];
-
 const Products = () => {
   const { categoryId } = useParams();
-  const products = categoryId
-    ? allProducts.filter((p) => p.categoryId === Number(categoryId))
-    : allProducts;
+
+  const { data: products, isLoading } = useQuery({
+    queryKey: ["products", categoryId],
+    queryFn: async () => {
+      let query = supabase.from("products").select("*").order("id");
+      if (categoryId) {
+        query = query.eq("category_id", Number(categoryId));
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -39,39 +36,49 @@ const Products = () => {
           </nav>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {products.map((product, i) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <Link to={`/shop/${product.id}`}>
-                  <div className="bg-card rounded-xl border border-border hover:border-primary/50 transition-all overflow-hidden group">
-                    <div className="aspect-square overflow-hidden">
-                      <img
-                        src={product.img}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-2">
-                      <h3 className="text-xs font-bold text-foreground line-clamp-2">{product.name}</h3>
-                      <p className="text-sm font-bold text-primary mt-1">{product.price.toFixed(2)} บาท</p>
-                      {product.stock > 0 ? (
-                        <button className="w-full mt-2 py-1.5 bg-primary text-primary-foreground text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors">
-                          ซื้อสินค้า
-                        </button>
-                      ) : (
-                        <button disabled className="w-full mt-2 py-1.5 bg-muted text-muted-foreground text-xs font-bold rounded-lg cursor-not-allowed">
-                          สินค้าหมด
-                        </button>
-                      )}
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="bg-card rounded-xl border border-border overflow-hidden">
+                    <Skeleton className="aspect-square w-full" />
+                    <div className="p-2 space-y-2">
+                      <Skeleton className="h-3 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
                     </div>
                   </div>
-                </Link>
-              </motion.div>
-            ))}
+                ))
+              : products?.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <Link to={`/shop/${product.id}`}>
+                      <div className="bg-card rounded-xl border border-border hover:border-primary/50 transition-all overflow-hidden group">
+                        <div className="aspect-square overflow-hidden">
+                          <img
+                            src={product.image || "/placeholder.svg"}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        <div className="p-2">
+                          <h3 className="text-xs font-bold text-foreground line-clamp-2">{product.name}</h3>
+                          <p className="text-sm font-bold text-primary mt-1">{Number(product.price).toFixed(2)} บาท</p>
+                          {product.stock > 0 ? (
+                            <button className="w-full mt-2 py-1.5 bg-primary text-primary-foreground text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors">
+                              ซื้อสินค้า
+                            </button>
+                          ) : (
+                            <button disabled className="w-full mt-2 py-1.5 bg-muted text-muted-foreground text-xs font-bold rounded-lg cursor-not-allowed">
+                              สินค้าหมด
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
           </div>
         </div>
       </div>
