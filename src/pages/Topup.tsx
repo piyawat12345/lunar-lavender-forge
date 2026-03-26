@@ -14,19 +14,22 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 const presetAmounts = [20, 50, 100, 200, 300, 500, 1000];
 
 const Topup = () => {
-  const { user } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [link, setLink] = useState("");
   const [activeTab, setActiveTab] = useState<"truewallet" | "promptpay">("truewallet");
   const [ppAmount, setPpAmount] = useState("");
   const [ppStep, setPpStep] = useState<"form" | "qr" | "success">("form");
   const [loading, setLoading] = useState(false);
+  const [idPay, setIdPay] = useState("");
+  const [qrImageUrl, setQrImageUrl] = useState("");
+  const [paymentDetails, setPaymentDetails] = useState<any>(null);
 
   useEffect(() => {
     if (!user) navigate("/login");
   }, [user, navigate]);
 
-  const { data: history } = useQuery({
+  const { data: history, refetch: refetchHistory } = useQuery({
     queryKey: ["topup-history", user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -42,45 +45,139 @@ const Topup = () => {
     enabled: !!user,
   });
 
-  const handlePromptPaySubmit = async () => {
-    if (!ppAmount || Number(ppAmount) <= 0 || !user) return;
-    setLoading(true);
-    const { error } = await supabase.from("topup_history").insert({
-      user_id: user.id,
-      amount: Number(ppAmount),
-      method: "promptpay",
-      status: "pending",
+  const callPaymentApi = async (body: Record<string, any>) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await supabase.functions.invoke("payment", {
+      body,
     });
-    setLoading(false);
-    if (error) {
-      toast.error("เกิดข้อผิดพลาด");
-    } else {
-      setPpStep("qr");
-    }
+    return res.data;
   };
 
-  const handleConfirmPayment = () => {
+  const handlePromptPaySubmit = async () => {
+    if (!ppAmount || Number(ppAmount) <= 0 || !user || !profile) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setPpStep("success");
-      toast.success("เติมเงินสำเร็จ!");
-    }, 2000);
+    try {
+      const data = await callPaymentApi({
+        action: "create_pay",
+        amount: Number(ppAmount),
+        ref1: profile.username,
+      });
+
+      if (data?.status === "1" || data?.id_pay) {
+        const payId = data.id_pay;
+        setIdPay(payId);
+
+        // Save to history
+        await supabase.from("topup_history").insert({
+          user_id: user.id,
+          amount: Number(ppAmount),
+          method: "promptpay",
+          status: "pending",
+          reference: payId,
+        });
+
+        // Get QR details
+        const details = await callPaymentApi({
+          action: "detail_pay",
+          id_pay: payId,
+        });
+
+        if (details) {
+          setPaymentDetails(details);
+          if (details.qr_image || details.qr_url || details.qr) {
+            setQrImageUrl(details.qr_image || details.qr_url || details.qr || "");
+          }
+        }
+
+        setPpStep("qr");
+      } else {
+        toast.error(data?.msg || "ไม่สามารถสร้างรายการได้ กรุณาลองใหม่");
+      }
+    } catch (err: any) {
+      console.error("PromptPay error:", err);
+      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
+    }
+    setLoading(false);
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!idPay || !user) return;
+    setLoading(true);
+    try {
+      const data = await callPaymentApi({
+        action: "confirm",
+        id_pay: idPay,
+      });
+
+      if (data?.status === "1") {
+        // Update topup history status
+        await supabase
+          .from("topup_history")
+          .update({ status: "completed" })
+          .eq("reference", idPay)
+          .eq("user_id", user.id);
+
+        await refreshProfile();
+        await refetchHistory();
+        setPpStep("success");
+        toast.success("เติมเงินสำเร็จ!");
+      } else {
+        toast.error(data?.msg || "ยังไม่พบการชำระเงิน กรุณาสแกน QR Code แล้วลองอีกครั้ง");
+      }
+    } catch (err: any) {
+      console.error("Confirm error:", err);
+      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
+    }
+    setLoading(false);
+  };
+
+  const handleCancelPayment = async () => {
+    if (idPay) {
+      try {
+        await callPaymentApi({ action: "cancel", id_pay: idPay });
+      } catch (e) {
+        // ignore cancel errors
+      }
+    }
+    setIdPay("");
+    setQrImageUrl("");
+    setPaymentDetails(null);
+    setPpStep("form");
   };
 
   const handleTrueWallet = async () => {
-    if (!link || !user) return;
+    if (!link || !user || !profile) return;
     setLoading(true);
-    await supabase.from("topup_history").insert({
-      user_id: user.id,
-      amount: 0,
-      method: "truewallet",
-      status: "pending",
-      reference: link,
-    });
+    try {
+      const res = await supabase.functions.invoke("truewallet", {
+        body: {
+          angpao_link: link,
+          username: profile.username,
+        },
+      });
+      const data = res.data;
+
+      if (data?.credit_added && data.credit_added > 0) {
+        await supabase.from("topup_history").insert({
+          user_id: user.id,
+          amount: data.credit_added,
+          method: "truewallet",
+          status: "completed",
+          reference: link,
+        });
+        await refreshProfile();
+        await refetchHistory();
+        toast.success(`เติมเงินสำเร็จ! ได้รับ ${data.credit_added} เครดิต`);
+        setLink("");
+      } else {
+        const errorMsg = data?.Msg || data?.msg || data?.error || "ลิงก์อังเปาไม่ถูกต้องหรือถูกใช้แล้ว";
+        toast.error(errorMsg);
+      }
+    } catch (err: any) {
+      console.error("TrueWallet error:", err);
+      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
+    }
     setLoading(false);
-    toast.success("ส่งลิงก์อังเปาแล้ว กำลังตรวจสอบ");
-    setLink("");
   };
 
   const tabs = [
@@ -109,7 +206,7 @@ const Topup = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => { setActiveTab(tab.id); setPpStep("form"); }}
+                onClick={() => { setActiveTab(tab.id); handleCancelPayment(); }}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   activeTab === tab.id
                     ? "bg-primary text-primary-foreground shadow-lg"
@@ -134,7 +231,7 @@ const Topup = () => {
                         <LinkIcon size={14} /> Aungpao - ลิ้งอังเป่า
                       </label>
                       <Input placeholder="https://gift.truemoney.com/campaign/?v=xxxx" value={link}
-                        onChange={(e) => setLink(e.target.value)} className="bg-secondary border-border" />
+                        onChange={(e) => setLink(e.target.value)} className="bg-secondary border-border" disabled={loading} />
                     </div>
                     <Button onClick={handleTrueWallet} disabled={!link || loading} className="w-full rounded-xl">
                       {loading ? <Loader2 size={16} className="mr-2 animate-spin" /> : <CheckCircle size={16} className="mr-2" />}
@@ -173,7 +270,7 @@ const Topup = () => {
                             <CreditCard size={14} className="inline mr-2" />จำนวนเงินที่ต้องการเติม (บาท)
                           </label>
                           <Input type="number" placeholder="ระบุจำนวนเงิน" value={ppAmount}
-                            onChange={(e) => setPpAmount(e.target.value)} className="bg-secondary border-border text-lg h-12" min={1} />
+                            onChange={(e) => setPpAmount(e.target.value)} className="bg-secondary border-border text-lg h-12" min={1} disabled={loading} />
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {presetAmounts.map((amt) => (
@@ -201,17 +298,20 @@ const Topup = () => {
                           <p className="text-muted-foreground text-sm">จำนวน <span className="text-primary font-bold text-lg">{ppAmount}</span> บาท</p>
                         </div>
                         <div className="bg-white rounded-2xl p-6 inline-block mx-auto shadow-lg border">
-                          <div className="w-52 h-52 bg-muted rounded-xl flex items-center justify-center">
-                            <div className="text-center">
-                              <QrCode size={80} className="text-muted-foreground mx-auto mb-2" />
-                              <p className="text-xs text-muted-foreground">QR Code</p>
-                              <p className="text-xs text-muted-foreground">จะแสดงเมื่อเชื่อมต่อ API</p>
+                          {qrImageUrl ? (
+                            <img src={qrImageUrl} alt="QR Code" className="w-52 h-52 object-contain" />
+                          ) : (
+                            <div className="w-52 h-52 bg-muted rounded-xl flex items-center justify-center">
+                              <div className="text-center">
+                                <QrCode size={80} className="text-muted-foreground mx-auto mb-2" />
+                                <p className="text-xs text-muted-foreground">กำลังโหลด QR Code...</p>
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground">ควรชำระภายใน <span className="text-primary font-semibold">24 ชม.</span></p>
                         <div className="flex gap-3">
-                          <Button variant="outline" onClick={() => setPpStep("form")} className="flex-1 rounded-xl">ยกเลิก</Button>
+                          <Button variant="outline" onClick={handleCancelPayment} className="flex-1 rounded-xl">ยกเลิก</Button>
                           <Button onClick={handleConfirmPayment} disabled={loading} className="flex-1 rounded-xl">
                             {loading ? <Loader2 size={16} className="mr-2 animate-spin" /> : <CheckCircle size={16} className="mr-2" />}
                             {loading ? "กำลังตรวจสอบ..." : "ยืนยันการโอนเงิน"}
@@ -228,7 +328,7 @@ const Topup = () => {
                           <p className="text-muted-foreground">คุณได้รับ <span className="text-primary font-bold">{ppAmount}</span> เครดิต ขอบคุณครับ</p>
                         </div>
                         <p className="text-sm text-muted-foreground">ตรวจสอบเครดิตของคุณ หากพบปัญหากรุณาติดต่อ Admin</p>
-                        <Button onClick={() => { setPpStep("form"); setPpAmount(""); }} className="rounded-xl">เติมเงินอีกครั้ง</Button>
+                        <Button onClick={() => { setPpStep("form"); setPpAmount(""); setIdPay(""); setQrImageUrl(""); }} className="rounded-xl">เติมเงินอีกครั้ง</Button>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -286,7 +386,7 @@ const TopupHistoryTable = ({ history }: { history: TopupRecord[] }) => (
                   h.status === "completed" ? "bg-green-500/20 text-green-400"
                   : h.status === "failed" ? "bg-red-500/20 text-red-400"
                   : "bg-yellow-500/20 text-yellow-400"
-                }`}>{h.status}</span>
+                }`}>{h.status === "completed" ? "สำเร็จ" : h.status === "failed" ? "ล้มเหลว" : "รอดำเนินการ"}</span>
               </td>
               <td className="py-3 px-2 text-muted-foreground">{new Date(h.created_at).toLocaleString("th-TH")}</td>
             </tr>
