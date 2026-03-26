@@ -12,7 +12,7 @@ const quickCards = [
 
 const HeroSection = () => {
   return (
-    <section className="pt-20">
+    <section>
       {/* Hero Banner */}
       <div className="max-w-6xl mx-auto px-4 py-4">
         <motion.div
