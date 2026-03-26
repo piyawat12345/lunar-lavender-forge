@@ -14,7 +14,181 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          created_at: string
+          id: number
+          image: string | null
+          name: string
+          product_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          image?: string | null
+          name: string
+          product_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          image?: string | null
+          name?: string
+          product_count?: number
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category_id: number | null
+          created_at: string
+          description: string | null
+          id: number
+          image: string | null
+          name: string
+          price: number
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          category_id?: number | null
+          created_at?: string
+          description?: string | null
+          id?: number
+          image?: string | null
+          name: string
+          price: number
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: number | null
+          created_at?: string
+          description?: string | null
+          id?: number
+          image?: string | null
+          name?: string
+          price?: number
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          credit: number
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          credit?: number
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          credit?: number
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      purchase_history: {
+        Row: {
+          created_at: string
+          delivered_data: string | null
+          id: string
+          price: number
+          product_id: number | null
+          product_name: string
+          quantity: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivered_data?: string | null
+          id?: string
+          price: number
+          product_id?: number | null
+          product_name: string
+          quantity?: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivered_data?: string | null
+          id?: string
+          price?: number
+          product_id?: number | null
+          product_name?: string
+          quantity?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topup_history: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          method: string
+          reference: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          method: string
+          reference?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string
+          reference?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
