@@ -1,19 +1,38 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { User, Wallet, Mail, Calendar, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { User, Wallet, Mail, Calendar, LogOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 const Profile = () => {
-  // Mock user data
-  const user = {
-    username: "TestUser",
-    email: "test@example.com",
-    credit: 1250.0,
-    joinDate: "2024-01-15",
-    status: "ปกติ",
+  const { user, profile, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/login");
+    }
+  }, [loading, user, navigate]);
+
+  const handleLogout = async () => {
+    await signOut();
+    toast.success("ออกจากระบบสำเร็จ");
+    navigate("/");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    );
+  }
+
+  if (!user || !profile) return null;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -29,8 +48,8 @@ const Profile = () => {
               <div className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <User size={40} className="text-primary" />
               </div>
-              <h1 className="text-xl font-bold">{user.username}</h1>
-              <p className="text-sm text-muted-foreground">สถานะ: {user.status}</p>
+              <h1 className="text-xl font-bold">{profile.username}</h1>
+              <p className="text-sm text-muted-foreground">สถานะ: {profile.status}</p>
             </div>
 
             <div className="space-y-4">
@@ -38,7 +57,7 @@ const Profile = () => {
                 <Wallet size={20} className="text-primary" />
                 <div>
                   <p className="text-xs text-muted-foreground">เครดิตคงเหลือ</p>
-                  <p className="text-lg font-bold text-primary">{user.credit.toFixed(2)} เครดิต</p>
+                  <p className="text-lg font-bold text-primary">{Number(profile.credit).toFixed(2)} เครดิต</p>
                 </div>
               </div>
 
@@ -54,7 +73,7 @@ const Profile = () => {
                 <Calendar size={20} className="text-muted-foreground" />
                 <div>
                   <p className="text-xs text-muted-foreground">วันที่สมัคร</p>
-                  <p className="text-sm font-medium">{user.joinDate}</p>
+                  <p className="text-sm font-medium">{new Date(profile.created_at).toLocaleDateString("th-TH")}</p>
                 </div>
               </div>
             </div>
@@ -74,6 +93,7 @@ const Profile = () => {
 
             <Button
               variant="ghost"
+              onClick={handleLogout}
               className="w-full mt-4 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
             >
               <LogOut size={16} className="mr-2" />

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, User, UserPlus } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,10 +14,41 @@ const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Register:", email, username, password);
+    if (!email || !username || !password || !rePassword) {
+      toast.error("กรุณากรอกข้อมูลให้ครบ");
+      return;
+    }
+    if (password !== rePassword) {
+      toast.error("รหัสผ่านไม่ตรงกัน");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    setLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("สมัครสมาชิกสำเร็จ! กรุณายืนยันอีเมลของคุณ");
+      navigate("/login");
+    }
   };
 
   return (
@@ -54,6 +87,7 @@ const Register = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 maxLength={50}
                 className="bg-secondary border-border"
+                disabled={loading}
               />
             </div>
 
@@ -68,6 +102,7 @@ const Register = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 maxLength={50}
                 className="bg-secondary border-border"
+                disabled={loading}
               />
             </div>
 
@@ -83,6 +118,7 @@ const Register = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   maxLength={20}
                   className="bg-secondary border-border pr-10"
+                  disabled={loading}
                 />
                 <button
                   type="button"
@@ -106,6 +142,7 @@ const Register = () => {
                   onChange={(e) => setRePassword(e.target.value)}
                   maxLength={20}
                   className="bg-secondary border-border pr-10"
+                  disabled={loading}
                 />
                 <button
                   type="button"
@@ -121,18 +158,9 @@ const Register = () => {
               นโยบายความเป็นส่วนตัว
             </Link>
 
-            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
-              <UserPlus size={16} className="mr-2" />
-              สร้างบัญชี
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full rounded-xl border-border text-foreground hover:bg-secondary"
-            >
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4 mr-2" />
-              Google Login
+            <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
+              {loading ? <Loader2 size={16} className="mr-2 animate-spin" /> : <UserPlus size={16} className="mr-2" />}
+              {loading ? "กำลังสร้างบัญชี..." : "สร้างบัญชี"}
             </Button>
           </form>
         </div>
