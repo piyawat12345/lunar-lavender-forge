@@ -81,10 +81,38 @@
   }
 
   .bg-glass {
-    background: hsl(var(--surface-glass) / 0.6);
+    background: hsl(var(--surface-glass) / 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  .navbar-gradient-border {
+    position: relative;
+  }
+  .navbar-gradient-border::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, hsl(270 80% 60%), hsl(330 80% 60%), hsl(270 80% 60%));
+    background-size: 200% 100%;
+    animation: gradient-slide 3s linear infinite;
+  }
+
+  @keyframes gradient-slide {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  .btn-gradient-primary {
+    background: linear-gradient(135deg, hsl(270 80% 55%), hsl(330 70% 55%));
+    transition: opacity 0.2s;
+  }
+  .btn-gradient-primary:hover {
+    opacity: 0.9;
   }
 
   .glow-primary {

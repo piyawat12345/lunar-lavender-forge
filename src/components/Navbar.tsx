@@ -37,7 +37,7 @@ const Navbar = () => {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-glass"
+      className="fixed top-0 left-0 right-0 z-50 bg-glass navbar-gradient-border"
     >
       <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-3">
         <Link to="/" className="flex items-center gap-2">
@@ -108,7 +108,7 @@ const Navbar = () => {
               </Button>
             </Link>
             <Link to="/login">
-              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
+              <Button size="sm" className="btn-gradient-primary text-primary-foreground rounded-full px-6">
                 เข้าสู่ระบบ
               </Button>
             </Link>
@@ -196,7 +196,7 @@ const Navbar = () => {
                   </Button>
                 </Link>
                 <Link to="/login" onClick={() => setOpen(false)}>
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full w-full">
+                  <Button className="btn-gradient-primary text-primary-foreground rounded-full w-full">
                     เข้าสู่ระบบ
                   </Button>
                 </Link>
