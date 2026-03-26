@@ -1,17 +1,24 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ChevronDown, Store, Film, Gamepad2 } from "lucide-react";
+import { Menu, X, ChevronDown, Store, Film, Gamepad2, Coins, Package, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const productLinks = [
-  { label: "สินค้า Roblox", href: "#products", icon: Gamepad2 },
-  { label: "สินค้า แอพดูหนัง", href: "#streaming", icon: Film },
+  { label: "สินค้า Roblox", href: "/categories", icon: Gamepad2 },
+  { label: "สินค้า แอพดูหนัง", href: "/premium", icon: Film },
+];
+
+const topupLinks = [
+  { label: "อั่งเปา", href: "/topup", icon: Coins },
 ];
 
 const navLinks = [
-  { label: "หน้าแรก", href: "#" },
-  { label: "สินค้าทั้งหมด", href: "#products", dropdown: productLinks },
-  { label: "ติดต่อ", href: "#contact" },
+  { label: "หน้าแรก", href: "/" },
+  { label: "สินค้าทั้งหมด", href: "/products", dropdown: productLinks, icon: Store },
+  { label: "เติมเงิน", href: "/topup", dropdown: topupLinks, icon: Coins },
+  { label: "คลังเก็บของ", href: "/inventory" },
+  { label: "ติดต่อ", href: "https://lin.ee/CeZmjXV", external: true },
 ];
 
 const Navbar = () => {
@@ -36,13 +43,13 @@ const Navbar = () => {
       transition={{ duration: 0.6 }}
       className="fixed top-0 left-0 right-0 z-50 bg-glass"
     >
-      <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
-        <a href="#" className="text-xl font-bold text-gradient-primary tracking-tight">
-          Maruai789
-        </a>
+      <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-3">
+        <Link to="/" className="flex items-center gap-2">
+          <img src="/img/logo/1720545452182_logo.png" alt="Maruai789" className="h-10" />
+        </Link>
 
         {/* Desktop */}
-        <div className="hidden md:flex items-center gap-8" ref={dropdownRef}>
+        <div className="hidden md:flex items-center gap-6" ref={dropdownRef}>
           {navLinks.map((link) =>
             link.dropdown ? (
               <div key={link.label} className="relative">
@@ -50,7 +57,7 @@ const Navbar = () => {
                   onClick={() => setDropdownOpen(dropdownOpen === link.label ? null : link.label)}
                   className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <Store size={15} />
+                  {link.icon && <link.icon size={15} />}
                   {link.label}
                   <ChevronDown size={14} className={`transition-transform ${dropdownOpen === link.label ? "rotate-180" : ""}`} />
                 </button>
@@ -64,37 +71,51 @@ const Navbar = () => {
                       className="absolute top-full left-0 mt-2 w-48 bg-card border border-border rounded-xl overflow-hidden shadow-lg"
                     >
                       {link.dropdown.map((item) => (
-                        <a
+                        <Link
                           key={item.label}
-                          href={item.href}
+                          to={item.href}
                           onClick={() => setDropdownOpen(null)}
                           className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                         >
                           <item.icon size={16} className="text-primary" />
                           {item.label}
-                        </a>
+                        </Link>
                       ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-            ) : (
+            ) : link.external ? (
               <a
                 key={link.label}
                 href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 {link.label}
               </a>
+            ) : (
+              <Link
+                key={link.label}
+                to={link.href}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {link.label}
+              </Link>
             )
           )}
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="rounded-full px-5 border-border text-foreground hover:bg-secondary">
-              สมัครสมาชิก
-            </Button>
-            <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
-              เข้าสู่ระบบ
-            </Button>
+            <Link to="/register">
+              <Button size="sm" variant="outline" className="rounded-full px-5 border-border text-foreground hover:bg-secondary">
+                สมัครสมาชิก
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
+                เข้าสู่ระบบ
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -122,7 +143,7 @@ const Navbar = () => {
                       className="flex items-center justify-between w-full py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <span className="flex items-center gap-2">
-                        <Store size={15} />
+                        {link.icon && <link.icon size={15} />}
                         {link.label}
                       </span>
                       <ChevronDown size={14} className={`transition-transform ${dropdownOpen === link.label ? "rotate-180" : ""}`} />
@@ -136,38 +157,53 @@ const Navbar = () => {
                           className="overflow-hidden pl-6"
                         >
                           {link.dropdown.map((item) => (
-                            <a
+                            <Link
                               key={item.label}
-                              href={item.href}
+                              to={item.href}
                               onClick={() => { setOpen(false); setDropdownOpen(null); }}
                               className="flex items-center gap-2 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                             >
                               <item.icon size={14} className="text-primary" />
                               {item.label}
-                            </a>
+                            </Link>
                           ))}
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
-                ) : (
+                ) : link.external ? (
                   <a
                     key={link.label}
                     href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     onClick={() => setOpen(false)}
                     className="py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {link.label}
                   </a>
+                ) : (
+                  <Link
+                    key={link.label}
+                    to={link.href}
+                    onClick={() => setOpen(false)}
+                    className="py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </Link>
                 )
               )}
               <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-border">
-                <Button variant="outline" className="rounded-full w-full border-border text-foreground hover:bg-secondary">
-                  สมัครสมาชิก
-                </Button>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full w-full">
-                  เข้าสู่ระบบ
-                </Button>
+                <Link to="/register" onClick={() => setOpen(false)}>
+                  <Button variant="outline" className="rounded-full w-full border-border text-foreground hover:bg-secondary">
+                    สมัครสมาชิก
+                  </Button>
+                </Link>
+                <Link to="/login" onClick={() => setOpen(false)}>
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full w-full">
+                    เข้าสู่ระบบ
+                  </Button>
+                </Link>
               </div>
             </div>
           </motion.div>
