@@ -9,7 +9,7 @@ const HeroSection = () => {
       {/* Background image */}
       <img
         src={heroBg}
-        alt=""
+        alt="Maruai789 ขายไอดีเกม Roblox"
         width={1920}
         height={1080}
         className="absolute inset-0 w-full h-full object-cover opacity-40"
@@ -37,10 +37,10 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.35 }}
           className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-tight"
         >
-          ศูนย์รวม{" "}
-          <span className="text-gradient-primary">ไอดีเกม</span>
+          ขาย<span className="text-gradient-primary">ไอดีไก่ตัน</span> Roblox
           <br />
-          คุณภาพ ราคาดีที่สุด
+          <span className="text-gradient-primary">Blox Fruit</span>,{" "}
+          <a href="#streaming" className="hover:underline">Netflix ราคาถูก</a>
         </motion.h1>
 
         <motion.p
@@ -49,9 +49,10 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.5 }}
           className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
         >
-          จำหน่ายไก่ตัน Roblox, Blox Fruit, แอพสตรีมมิ่ง และไอดีพรีเมียมอื่น ๆ
+          Maruai789 ศูนย์รวมไก่ตัน Roblox คุณภาพดี ราคาถูก
+          เหมาะสำหรับคนที่ต้องการเริ่มต้นเกม Blox Fruit แบบตึงๆ พร้อมสู้
           <br className="hidden sm:block" />
-          ระบบอัตโนมัติ ส่งทันที พร้อมรับประกันทุกรายการ
+          หรือจะนำไปขายต่อก็คุ้มสุดๆ ระบบส่งไว ปลอดภัย บริการหลังการขาย 24 ชม.
         </motion.p>
 
         <motion.div

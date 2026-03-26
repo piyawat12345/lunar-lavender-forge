@@ -1,17 +1,33 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown, Store, Film, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const productLinks = [
+  { label: "สินค้า Roblox", href: "#products", icon: Gamepad2 },
+  { label: "สินค้า แอพดูหนัง", href: "#streaming", icon: Film },
+];
 
 const navLinks = [
   { label: "หน้าแรก", href: "#" },
-  { label: "สินค้า", href: "#products" },
-  { label: "บริการ", href: "#features" },
+  { label: "สินค้าทั้งหมด", href: "#products", dropdown: productLinks },
   { label: "ติดต่อ", href: "#contact" },
 ];
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   return (
     <motion.nav
@@ -26,19 +42,60 @@ const Navbar = () => {
         </a>
 
         {/* Desktop */}
-        <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {link.label}
-            </a>
-          ))}
-          <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
-            เข้าสู่ระบบ
-          </Button>
+        <div className="hidden md:flex items-center gap-8" ref={dropdownRef}>
+          {navLinks.map((link) =>
+            link.dropdown ? (
+              <div key={link.label} className="relative">
+                <button
+                  onClick={() => setDropdownOpen(dropdownOpen === link.label ? null : link.label)}
+                  className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Store size={15} />
+                  {link.label}
+                  <ChevronDown size={14} className={`transition-transform ${dropdownOpen === link.label ? "rotate-180" : ""}`} />
+                </button>
+                <AnimatePresence>
+                  {dropdownOpen === link.label && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full left-0 mt-2 w-48 bg-card border border-border rounded-xl overflow-hidden shadow-lg"
+                    >
+                      {link.dropdown.map((item) => (
+                        <a
+                          key={item.label}
+                          href={item.href}
+                          onClick={() => setDropdownOpen(null)}
+                          className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                        >
+                          <item.icon size={16} className="text-primary" />
+                          {item.label}
+                        </a>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <a
+                key={link.label}
+                href={link.href}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {link.label}
+              </a>
+            )
+          )}
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="rounded-full px-5 border-border text-foreground hover:bg-secondary">
+              สมัครสมาชิก
+            </Button>
+            <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
+              เข้าสู่ระบบ
+            </Button>
+          </div>
         </div>
 
         {/* Mobile toggle */}
@@ -56,20 +113,62 @@ const Navbar = () => {
             exit={{ height: 0, opacity: 0 }}
             className="md:hidden overflow-hidden bg-glass border-t border-border"
           >
-            <div className="flex flex-col gap-4 px-6 py-6">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {link.label}
-                </a>
-              ))}
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full w-full">
-                เข้าสู่ระบบ
-              </Button>
+            <div className="flex flex-col gap-1 px-6 py-4">
+              {navLinks.map((link) =>
+                link.dropdown ? (
+                  <div key={link.label}>
+                    <button
+                      onClick={() => setDropdownOpen(dropdownOpen === link.label ? null : link.label)}
+                      className="flex items-center justify-between w-full py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Store size={15} />
+                        {link.label}
+                      </span>
+                      <ChevronDown size={14} className={`transition-transform ${dropdownOpen === link.label ? "rotate-180" : ""}`} />
+                    </button>
+                    <AnimatePresence>
+                      {dropdownOpen === link.label && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden pl-6"
+                        >
+                          {link.dropdown.map((item) => (
+                            <a
+                              key={item.label}
+                              href={item.href}
+                              onClick={() => { setOpen(false); setDropdownOpen(null); }}
+                              className="flex items-center gap-2 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <item.icon size={14} className="text-primary" />
+                              {item.label}
+                            </a>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    className="py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                )
+              )}
+              <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-border">
+                <Button variant="outline" className="rounded-full w-full border-border text-foreground hover:bg-secondary">
+                  สมัครสมาชิก
+                </Button>
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full w-full">
+                  เข้าสู่ระบบ
+                </Button>
+              </div>
             </div>
           </motion.div>
         )}
