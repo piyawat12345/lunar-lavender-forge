@@ -9,14 +9,10 @@ const productLinks = [
   { label: "สินค้า แอพดูหนัง", href: "/premium", icon: Film },
 ];
 
-const topupLinks = [
-  { label: "อั่งเปา", href: "/topup", icon: Coins },
-];
-
 const navLinks = [
   { label: "หน้าแรก", href: "/" },
   { label: "สินค้าทั้งหมด", href: "/products", dropdown: productLinks, icon: Store },
-  { label: "เติมเงิน", href: "/topup", dropdown: topupLinks, icon: Coins },
+  { label: "เติมเงิน", href: "/topup" },
   { label: "คลังเก็บของ", href: "/inventory" },
   { label: "ติดต่อ", href: "https://lin.ee/CeZmjXV", external: true },
 ];
