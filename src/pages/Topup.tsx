@@ -84,7 +84,9 @@ const Topup = () => {
 
         if (details) {
           setPaymentDetails(details);
-          if (details.qr_image || details.qr_url || details.qr) {
+          if (details.qr_base64_image) {
+            setQrImageUrl(`data:image/png;base64,${details.qr_base64_image}`);
+          } else if (details.qr_image || details.qr_url || details.qr) {
             setQrImageUrl(details.qr_image || details.qr_url || details.qr || "");
           }
         }
