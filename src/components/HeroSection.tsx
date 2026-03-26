@@ -1,93 +1,85 @@
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck } from "lucide-react";
-import heroBg from "@/assets/hero-bg.jpg";
+import { Link } from "react-router-dom";
+
+const heroBanner = "/img/1720545450016.jpg";
+
+const quickCards = [
+  { img: "/img/catgory/1720545447125.jpg", alt: "ติดต่อสอบถาม", href: "https://lin.ee/CeZmjXV", external: true },
+  { img: "/img/catgory/1720545445488.jpg", alt: "เติมเงิน", href: "/topup" },
+  { img: "/img/catgory/1720545443741.jpg", alt: "เลือกซื้อสินค้า", href: "/categories" },
+  { img: "/img/catgory/1720545448723.jpg", alt: "บริการอื่นๆ", href: "/premium" },
+];
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background image */}
-      <img
-        src={heroBg}
-        alt="Maruai789 ขายไอดีเกม Roblox"
-        width={1920}
-        height={1080}
-        className="absolute inset-0 w-full h-full object-cover opacity-40"
-      />
-      {/* Top glow */}
-      <div className="absolute inset-0 hero-glow" />
-      {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent" />
-
-      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+    <section className="pt-20">
+      {/* Hero Banner */}
+      <div className="max-w-6xl mx-auto px-4 py-4">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
         >
-          <div className="inline-flex items-center gap-2 bg-glass rounded-full px-4 py-1.5 mb-8">
-            <ShieldCheck size={14} className="text-primary" />
-            <span className="text-xs font-medium text-muted-foreground">ปลอดภัย 100% · ส่งไว · บริการ 24 ชม.</span>
-          </div>
+          <img
+            src={heroBanner}
+            alt="Maruai789 Hero Banner"
+            className="w-full rounded-xl"
+          />
         </motion.div>
+      </div>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.35 }}
-          className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-tight"
-        >
-          ขาย<span className="text-gradient-primary">ไอดีไก่ตัน</span> Roblox
-          <br />
-          <span className="text-gradient-primary">Blox Fruit</span>,{" "}
-          <a href="#streaming" className="hover:underline">Netflix ราคาถูก</a>
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
-        >
-          Maruai789 ศูนย์รวมไก่ตัน Roblox คุณภาพดี ราคาถูก
-          เหมาะสำหรับคนที่ต้องการเริ่มต้นเกม Blox Fruit แบบตึงๆ พร้อมสู้
-          <br className="hidden sm:block" />
-          หรือจะนำไปขายต่อก็คุ้มสุดๆ ระบบส่งไว ปลอดภัย บริการหลังการขาย 24 ชม.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.65 }}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
-        >
-          <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 text-base glow-primary">
-            เลือกซื้อสินค้า
-            <ArrowRight size={18} className="ml-2" />
-          </Button>
-          <Button size="lg" variant="outline" className="rounded-full px-8 text-base border-border text-foreground hover:bg-secondary">
-            สมัครสมาชิก
-          </Button>
-        </motion.div>
-
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1 }}
-          className="mt-16 grid grid-cols-3 gap-8 max-w-md mx-auto"
-        >
-          {[
-            { value: "10K+", label: "ลูกค้า" },
-            { value: "50K+", label: "ออเดอร์" },
-            { value: "24/7", label: "บริการ" },
-          ].map((stat) => (
-            <div key={stat.label}>
-              <div className="text-2xl sm:text-3xl font-bold text-gradient-primary">{stat.value}</div>
-              <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
-            </div>
+      {/* Quick Access Cards - matching old site */}
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {quickCards.map((card, i) => (
+            <motion.div
+              key={card.alt}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + i * 0.1 }}
+            >
+              {card.external ? (
+                <a href={card.href} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={card.img}
+                    alt={card.alt}
+                    className="w-full rounded-xl hover:scale-[1.02] transition-transform cursor-pointer"
+                  />
+                </a>
+              ) : (
+                <Link to={card.href}>
+                  <img
+                    src={card.img}
+                    alt={card.alt}
+                    className="w-full rounded-xl hover:scale-[1.02] transition-transform cursor-pointer"
+                  />
+                </Link>
+              )}
+            </motion.div>
           ))}
-        </motion.div>
+        </div>
+      </div>
+
+      {/* Notices - matching old site */}
+      <div className="max-w-6xl mx-auto px-4 mt-6 space-y-3">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+          <h4 className="font-bold text-amber-400 text-sm">**แจ้งให้ทราบ/Notice**</h4>
+          <p className="text-sm text-foreground mt-1">ทุกไอดีรับประกัน 3 วันเท่านั้น / All IDs are guaranteed for only 3 days.</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            ถ้า ID Roblox ติด 2 Step Verification ให้ไปแก้ที่นี่{" "}
+            <a href="https://genhubs.com/tools/device-logout" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">คลิก</a>
+          </p>
+        </div>
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+          <h4 className="font-bold text-amber-400 text-sm">แจ้งให้ทราบ/Notice</h4>
+          <p className="text-sm text-foreground mt-1">เคลมกรณีติดกุญแจเท่านั้น หากนำไอดีไปฟามต่อแล้วโดนแบนจากในเกม ไม่สามารถเคลมได้</p>
+          <p className="text-xs text-muted-foreground mt-1">Claim only in case of key lock.</p>
+        </div>
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+          <h4 className="font-bold text-amber-400 text-sm">แจ้งให้ทราบ/Notice</h4>
+          <p className="text-sm text-foreground mt-1">ทางร้านปรับเป็นระบบผูกเมลแดงแล้ว ประกันจะหมดต่อเมื่อ เปลี่ยนเมลหรือลบเมล</p>
+          <p className="text-xs text-muted-foreground mt-1">The store has switched to a red-email binding system.</p>
+        </div>
       </div>
     </section>
   );
