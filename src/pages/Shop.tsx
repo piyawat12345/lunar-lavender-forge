@@ -1,17 +1,15 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useParams } from "react-router-dom";
-import { Minus, Plus, AlertTriangle, ShoppingCart } from "lucide-react";
+import { Minus, Plus, AlertTriangle, ShoppingCart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
-
-// Mock product data
-const productData: Record<string, { name: string; price: number; img: string; stock: number; description: string }> = {
-  "1": { name: "Blox Fruit V4 T1 Human", price: 89, img: "/img/product/v4t1_human.png", stock: 5, description: "ไอดี Blox Fruit V4 Race Human พร้อมเล่น" },
-  "2": { name: "Blox Fruit V4 T1 Mink", price: 99, img: "/img/product/v4t1_mink.png", stock: 3, description: "ไอดี Blox Fruit V4 Race Mink พร้อมเล่น" },
-  "7": { name: "Netflix Premium 6 เดือน", price: 199, img: "/img/product/6m.png", stock: 10, description: "Netflix Premium 6 เดือน ดูได้ทุกอุปกรณ์" },
-};
 
 const notices = [
   {
@@ -32,8 +30,61 @@ const notices = [
 
 const Shop = () => {
   const { id } = useParams();
-  const product = productData[id || "1"] || productData["1"];
   const [quantity, setQuantity] = useState(1);
+  const { user, profile } = useAuth();
+  const [buying, setBuying] = useState(false);
+
+  const { data: product, isLoading } = useQuery({
+    queryKey: ["product", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", Number(id))
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const handleBuy = async () => {
+    if (!user || !profile || !product) return;
+    const totalPrice = Number(product.price) * quantity;
+    if (Number(profile.credit) < totalPrice) {
+      toast.error("เครดิตไม่เพียงพอ กรุณาเติมเงินก่อน");
+      return;
+    }
+    setBuying(true);
+    const { error } = await supabase.from("purchase_history").insert({
+      user_id: user.id,
+      product_id: product.id,
+      product_name: product.name,
+      price: totalPrice,
+      quantity,
+    });
+    setBuying(false);
+    if (error) {
+      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
+    } else {
+      toast.success("สั่งซื้อสำเร็จ! ตรวจสอบที่คลังเก็บของ");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Navbar />
+        <div className="pt-24 pb-24 px-4">
+          <div className="max-w-6xl mx-auto">
+            <Skeleton className="h-96 w-full rounded-2xl" />
+          </div>
+        </div>
+        <MobileBottomNav />
+      </div>
+    );
+  }
+
+  if (!product) return null;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -48,7 +99,6 @@ const Shop = () => {
             <span className="text-foreground">{product.name}</span>
           </nav>
 
-          {/* Notices */}
           <div className="space-y-3 mb-6">
             {notices.map((notice, i) => (
               <div key={i} className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
@@ -69,7 +119,7 @@ const Shop = () => {
             <div className="grid md:grid-cols-[350px_1fr] gap-6 p-6">
               <div className="flex justify-center">
                 <img
-                  src={product.img}
+                  src={product.image || "/placeholder.svg"}
                   alt={product.name}
                   className="w-full max-w-[350px] aspect-square object-cover rounded-xl border-2 border-primary/30"
                 />
@@ -77,7 +127,7 @@ const Shop = () => {
 
               <div className="space-y-4">
                 <h1 className="text-xl font-bold">{product.name}</h1>
-                <p className="text-2xl font-bold text-primary">{product.price.toFixed(2)} บาท / ชิ้น</p>
+                <p className="text-2xl font-bold text-primary">{Number(product.price).toFixed(2)} บาท / ชิ้น</p>
 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">รายละเอียดสินค้า</h3>
@@ -119,12 +169,23 @@ const Shop = () => {
                   <p className="text-xs text-muted-foreground mt-2">เหลือสินค้าอีก {product.stock} ชิ้น</p>
                 </div>
 
-                <Link to="/login">
-                  <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl mt-4">
-                    <ShoppingCart size={16} className="mr-2" />
-                    เข้าสู่ระบบเพื่อซื้อสินค้า
+                {user ? (
+                  <Button
+                    onClick={handleBuy}
+                    disabled={product.stock === 0 || buying}
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl mt-4"
+                  >
+                    {buying ? <Loader2 size={16} className="mr-2 animate-spin" /> : <ShoppingCart size={16} className="mr-2" />}
+                    {buying ? "กำลังสั่งซื้อ..." : `ซื้อสินค้า (${(Number(product.price) * quantity).toFixed(2)} บาท)`}
                   </Button>
-                </Link>
+                ) : (
+                  <Link to="/login">
+                    <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl mt-4">
+                      <ShoppingCart size={16} className="mr-2" />
+                      เข้าสู่ระบบเพื่อซื้อสินค้า
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>

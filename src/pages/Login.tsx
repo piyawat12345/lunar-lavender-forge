@@ -1,19 +1,40 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, LogIn, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: connect to backend
-    console.log("Login:", email, password);
+    if (!email || !password) {
+      toast.error("กรุณากรอกข้อมูลให้ครบ");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setLoading(false);
+
+    if (error) {
+      toast.error(error.message === "Invalid login credentials"
+        ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
+        : error.message);
+    } else {
+      toast.success("เข้าสู่ระบบสำเร็จ!");
+      navigate("/");
+    }
   };
 
   return (
@@ -43,15 +64,16 @@ const Login = () => {
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="text-sm text-foreground flex items-center gap-2 mb-2">
-                <Mail size={14} /> E-mail or Username (อีเมลหรือชื่อผู้ใช้)
+                <Mail size={14} /> E-mail (อีเมล)
               </label>
               <Input
-                type="text"
-                placeholder="E-mail or Username"
+                type="email"
+                placeholder="E-mail"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 maxLength={60}
                 className="bg-secondary border-border"
+                disabled={loading}
               />
             </div>
 
@@ -67,6 +89,7 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   maxLength={20}
                   className="bg-secondary border-border pr-10"
+                  disabled={loading}
                 />
                 <button
                   type="button"
@@ -78,18 +101,9 @@ const Login = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
-              <LogIn size={16} className="mr-2" />
-              เข้าสู่ระบบ
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full rounded-xl border-border text-foreground hover:bg-secondary"
-            >
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4 mr-2" />
-              Google Login
+            <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
+              {loading ? <Loader2 size={16} className="mr-2 animate-spin" /> : <LogIn size={16} className="mr-2" />}
+              {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </Button>
           </form>
         </div>

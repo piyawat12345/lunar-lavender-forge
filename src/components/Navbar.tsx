@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ChevronDown, Store, Film, Gamepad2, Coins, Package, User } from "lucide-react";
+import { Menu, X, ChevronDown, Store, Film, Gamepad2, Coins, Package, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const productLinks = [
   { label: "สินค้า Roblox", href: "/categories", icon: Gamepad2 },
@@ -21,6 +23,8 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -31,6 +35,12 @@ const Navbar = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const handleLogout = async () => {
+    await signOut();
+    toast.success("ออกจากระบบสำเร็จ");
+    navigate("/");
+  };
 
   return (
     <motion.nav
@@ -101,18 +111,39 @@ const Navbar = () => {
               </Link>
             )
           )}
-          <div className="flex items-center gap-2">
-            <Link to="/register">
-              <Button size="sm" variant="outline" className="rounded-full px-5 border-border text-foreground hover:bg-secondary">
-                สมัครสมาชิก
+
+          {/* Auth buttons */}
+          {user ? (
+            <div className="flex items-center gap-3">
+              {profile && (
+                <span className="text-xs text-primary font-medium">
+                  {Number(profile.credit).toFixed(2)} เครดิต
+                </span>
+              )}
+              <Link to="/profile">
+                <Button size="sm" variant="outline" className="rounded-full px-4 border-border gap-2">
+                  <User size={14} />
+                  {profile?.username || "โปรไฟล์"}
+                </Button>
+              </Link>
+              <Button size="sm" variant="ghost" onClick={handleLogout} className="rounded-full px-3 text-muted-foreground hover:text-destructive">
+                <LogOut size={14} />
               </Button>
-            </Link>
-            <Link to="/login">
-              <Button size="sm" className="btn-gradient-primary text-primary-foreground rounded-full px-6">
-                เข้าสู่ระบบ
-              </Button>
-            </Link>
-          </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link to="/register">
+                <Button size="sm" variant="outline" className="rounded-full px-5 border-border text-foreground hover:bg-secondary">
+                  สมัครสมาชิก
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button size="sm" className="btn-gradient-primary text-primary-foreground rounded-full px-6">
+                  เข้าสู่ระบบ
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -190,16 +221,42 @@ const Navbar = () => {
                 )
               )}
               <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-border">
-                <Link to="/register" onClick={() => setOpen(false)}>
-                  <Button variant="outline" className="rounded-full w-full border-border text-foreground hover:bg-secondary">
-                    สมัครสมาชิก
-                  </Button>
-                </Link>
-                <Link to="/login" onClick={() => setOpen(false)}>
-                  <Button className="btn-gradient-primary text-primary-foreground rounded-full w-full">
-                    เข้าสู่ระบบ
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    {profile && (
+                      <p className="text-xs text-primary font-medium text-center mb-1">
+                        {Number(profile.credit).toFixed(2)} เครดิต
+                      </p>
+                    )}
+                    <Link to="/profile" onClick={() => setOpen(false)}>
+                      <Button variant="outline" className="rounded-full w-full border-border gap-2">
+                        <User size={14} />
+                        {profile?.username || "โปรไฟล์"}
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      onClick={() => { handleLogout(); setOpen(false); }}
+                      className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full"
+                    >
+                      <LogOut size={14} className="mr-2" />
+                      ออกจากระบบ
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/register" onClick={() => setOpen(false)}>
+                      <Button variant="outline" className="rounded-full w-full border-border text-foreground hover:bg-secondary">
+                        สมัครสมาชิก
+                      </Button>
+                    </Link>
+                    <Link to="/login" onClick={() => setOpen(false)}>
+                      <Button className="btn-gradient-primary text-primary-foreground rounded-full w-full">
+                        เข้าสู่ระบบ
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
